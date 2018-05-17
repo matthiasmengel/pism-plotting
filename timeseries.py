@@ -1,4 +1,12 @@
-def get_timeseries_data(datapath, ts_variables = ["slvol","area_glacierized_shelf"],
+
+import os
+import netCDF4 as nc
+
+
+def get_timeseries_data(datapath, ts_variables = ["slvol","ice_area_glacierized_floating",
+                                                  "ice_area_glacierized_grounded",
+                                                 "basal_mass_flux_floating"
+                                                 ],
                         ts_file_name="timeseries.nc"):
 
     """ get time series variables ts_variables from PISM timeseries
@@ -13,7 +21,7 @@ def get_timeseries_data(datapath, ts_variables = ["slvol","area_glacierized_shel
     try:
         nct = ncf.variables["time"]
     except KeyError as error:
-        print datapath.split("/")[-1], "contains no data, skip."
+        print os.path.join(datapath,ts_file_name), "contains no data, skip."
         raise error
 
     ts_data = {}
@@ -29,6 +37,7 @@ def get_timeseries_data(datapath, ts_variables = ["slvol","area_glacierized_shel
     ts_data.rename_axes({"x0":"time"})
 
     return ts_data
+
 
 def get_last_common_time(ts_data):
 
@@ -52,8 +61,9 @@ def get_last_common_time(ts_data):
     return last_common_time, longest_run_time
 
 
-def get_several_timeseries_data(datapath,ts_variables = ["slvol","area_glacierized_shelf"],
-                                ts_file_pattern="timeseries_2*",
+def get_several_timeseries_data(datapath,ts_variables = ["slvol","ice_area_glacierized_floating",
+                                                         "ice_area_glacierized_grounded",],
+                                ts_file_pattern="timeseries_*nc",
                                 latest_ts_file="timeseries.nc"):
 
     """ for restarted runs: concatenate datasets from several files."""
@@ -64,8 +74,17 @@ def get_several_timeseries_data(datapath,ts_variables = ["slvol","area_glacieriz
 
     ts_data_per_file = []
     for ts_file in restarted_ts_files+[latest_ts_file]:
-        print ts_file
-        ts_data_per_file.append(get_timeseries_data(
-            datapath,ts_variables,ts_file_name=ts_file.split("/")[-1]))
+#         print ts_file
+        try:
+            ts_data_per_file.append(get_timeseries_data(
+                datapath,ts_variables,ts_file_name=ts_file.split("/")[-1]))
+        except KeyError:
+            pass
 
-    return da.concatenate_ds(ts_data_per_file, axis='time', align=True)
+    concatenated_ts = da.concatenate_ds(ts_data_per_file, axis='time', align=True)
+
+    conts = {}
+    for k in concatenated_ts.keys():
+        conts[k] = concatenated_ts[k][np.unique(concatenated_ts.time)]
+
+    return da.Dataset(conts)
