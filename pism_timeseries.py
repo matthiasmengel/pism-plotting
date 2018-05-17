@@ -1,7 +1,9 @@
 
 import os
+import glob
+import numpy as np
 import netCDF4 as nc
-
+import dimarray as da
 
 def get_timeseries_data(datapath, ts_variables = ["slvol","ice_area_glacierized_floating",
                                                   "ice_area_glacierized_grounded",
