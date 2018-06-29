@@ -80,8 +80,11 @@ def get_several_timeseries_data(datapath,ts_variables = ["slvol","ice_area_glaci
         try:
             ts_data_per_file.append(get_timeseries_data(
                 datapath,ts_variables,ts_file_name=ts_file.split("/")[-1]))
-        except KeyError:
+        except (KeyError,IOError):
             pass
+
+    if ts_data_per_file == []:
+        raise IOError("no timeseries files available.")
 
     concatenated_ts = da.concatenate_ds(ts_data_per_file, axis='time', align=True)
 
