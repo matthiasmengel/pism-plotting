@@ -12,13 +12,13 @@ def get_spatial_variable(fname,varname):
     try:
         ncf = nc.Dataset(fname,"r")
     except IOError as error:
-        print fname, "not found."
+        print(fname, "not found.")
         raise error
 
     try:
         var = ncf.variables[varname][:]
     except KeyError as error:
-        print "availables variables are", ncf.variables.keys()
+        print("availables variables are", list(ncf.variables.keys()))
         raise error
 
     ncf.close()
@@ -37,7 +37,7 @@ def get_spatial(exp, varname, years=[2000,2100,2200,2300]):
             var[y] = get_spatial_variable(
                 os.path.join(exp,"extra_"+str(y)+".000.nc"),varname)
         except IOError:
-            print y,"not available."
+            print(y,"not available.")
             continue
 
     return var
@@ -58,7 +58,7 @@ def contour_variable(fname,varname,**kwargs):
     try:
         ncf = nc.Dataset(ncfname,"r")
     except IOError as error:
-        print ncfname, "not found."
+        print(ncfname, "not found.")
         raise error
     plt.contour(np.squeeze(ncf.variables[varname][0:150,0:150]),origin="lower",
                interpolation="nearest",**kwargs)
